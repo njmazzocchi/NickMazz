@@ -305,7 +305,7 @@
   .cur-head.is-hover .cur-dot{background:var(--pink);box-shadow:0 0 0 1px var(--ink)}
   .cur.hide .cur-dot{opacity:0}
 
-  #reveal{position:fixed;inset:0;z-index:10000;pointer-events:none}
+  #reveal{position:fixed;top:0;left:0;width:100vw;height:100vh;height:100lvh;z-index:10000;pointer-events:none;overflow:hidden}
   #reveal svg{position:absolute;inset:0;width:100%;height:100%;display:block}
   #reveal .mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);animation:markOut .22s ease .2s forwards}
   #reveal .mark::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pink);margin:0 10px 1px 0;vertical-align:middle}
@@ -705,7 +705,7 @@
 
   /* circle reveal on load */
   (function(){
-    var reveal=document.getElementById('reveal'), hole=document.getElementById('revealHole'), root=document.documentElement;
+    var reveal=document.getElementById('reveal'), hole=document.getElementById('revealHole'), root=document.documentElement, svg=reveal&&reveal.querySelector('svg');
     if(!reveal) return;
     if(reduce||!hole){ reveal.remove(); root.classList.add('go'); return; }
     var t0=window.__revealT0||performance.now(), HOLD=320, DUR=900, GO=900, done=false;
@@ -714,7 +714,9 @@
     function frame(now){
       if(done) return;
       var p=Math.min(1,Math.max(0,(now-t0-HOLD)/DUR));
-      hole.setAttribute('r',String(ease(p)*(Math.hypot(innerWidth,innerHeight)/2+6)));
+      var box=(svg||reveal).getBoundingClientRect(), bw=box.width||innerWidth, bh=box.height||innerHeight;
+      hole.setAttribute('cx',String(bw/2)); hole.setAttribute('cy',String(bh/2)); hole.setAttribute('r',String(ease(p)*(Math.hypot(bw,bh)/2+12)));
+      reveal.style.opacity=p>.85?String(Math.max(0,1-(p-.85)/.15)):'1';
       if(now-t0>GO) root.classList.add('go');
       if(p<1) requestAnimationFrame(frame); else finish();
     }

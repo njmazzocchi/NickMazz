@@ -632,9 +632,11 @@
         <p class="sub">Leave your email and I'll get back to you within a day.</p>
       </div>
       <div class="form-col">
-        <form class="form" id="newsForm" name="contact" method="POST" action="/" data-netlify="true" netlify-honeypot="bot-field" novalidate>
-          <input type="hidden" name="form-name" value="contact">
-          <p style="display:none"><label>Leave this field empty <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+        <form class="form" id="newsForm" method="POST" action="https://api.web3forms.com/submit" novalidate>
+          <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_KEY">
+          <input type="hidden" name="subject" value="New message from nickmazz.com">
+          <input type="hidden" name="from_name" value="nickmazz.com">
+          <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
           <label for="email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Email address</label>
           <input id="email" name="email" type="email" placeholder="Your email" autocomplete="email" required>
           <button type="submit" aria-label="Send"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13 13 3M5 3h8v8"/></svg></button>
@@ -963,18 +965,20 @@
     });
   }
 
-  /* contact form: posts to Netlify Forms (the host stores the submission and emails Nick) */
-  var form=document.getElementById('newsForm'), ok=document.getElementById('formOk'), email=document.getElementById('email'), sending=false;
+  /* contact form: posts to Web3Forms (free), which emails Nick each submission. Paste the access key into the hidden field above. */
+  var form=document.getElementById('newsForm'), ok=document.getElementById('formOk'), email=document.getElementById('email'), sending=false, KEY_PLACEHOLDER='YOUR_WEB3FORMS_KEY';
   function say(msg,color){ ok.hidden=false; ok.style.color=color; ok.textContent=msg; }
   form.addEventListener('submit',function(ev){
     ev.preventDefault();
     if(sending) return;
     var v=email.value.trim();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ say('Enter a valid email address.','var(--pink)'); email.focus(); return; }
-    var body=new URLSearchParams(new FormData(form)).toString();
+    var data={}; new FormData(form).forEach(function(val,key){ data[key]=val; });
+    if(data.access_key===KEY_PLACEHOLDER){ say('That didn\u2019t go through. Email me directly and I\u2019ll reply within a day.','var(--pink)'); return; }
     sending=true; say('Sending\u2026','var(--bone)');
-    fetch(form.getAttribute('action')||'/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
-      .then(function(r){ if(!r.ok) throw new Error(r.status); say('Got it. I\u2019ll be in touch within a day.','var(--lime)'); form.reset(); })
+    fetch(form.getAttribute('action'),{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(!j||!j.success) throw new Error('rejected'); say('Got it. I\u2019ll be in touch within a day.','var(--lime)'); form.reset(); })
       .catch(function(){ say('That didn\u2019t go through. Email me directly and I\u2019ll reply within a day.','var(--pink)'); })
       .then(function(){ sending=false; });
   });
